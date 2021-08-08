@@ -1,2 +1,2 @@
-# get-azure-device-owners
-A PowerShell script that retrieves from Azure AD a list of all users that own compliant devices with the specified OS
+# Summary
+A PowerShell script that connects to Azure AD and retrieves a list of owners of compliant devices with the specified OS
