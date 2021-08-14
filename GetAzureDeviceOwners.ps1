@@ -7,7 +7,7 @@
     Then retrieves the registered owners of those devices and exports them to a CSV file. 
 
     .INPUTS
-    Doesn't take any inputs
+    Doesn't accept any inputs
 
     .OUTPUTS
     Outputs a CSV file in the same directory the script is run from
@@ -20,65 +20,53 @@
 $targetOS = "Windows"
 $currentDate = (Get-Date).ToString("M-d-yyyy-hhmmss")
 $exportFilePath = "$($PSScriptRoot)\$($targetOS)_Device_Owners_$($currentDate).csv"
-$azureConnected = $false
 $resultsFound = $false
 $azureGroupID = "ed1c9378-3a5e-433d-8fc9-4c9d620d390d"
 $azureGroup = Get-AzureADGroup -ObjectId $azureGroupID
 
 
-
 #-------------------------------------------- Connect to AzureAD ------------------------------------------------------#
 
 
-if(!$azureConnected){
+try {    
 
     Write-Verbose "Connecting to AzureAD. This might take a moment..." -Verbose
 
-    try {    
+    # Force TLS 1.2 encryption for compatibility with PowerShell Gallery
+
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 
-        # Force TLS 1.2 encryption for compatibility with PowerShell Gallery
+    # check to see if AzureAD module is installed and install if necessary
 
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    if ($null -eq (Get-Module -ListAvailable -Name AzureAD)) {
 
+        Write-Verbose "Installing AzureAD module..." -Verbose
+        Install-Module AzureAD -Scope CurrentUser -Confirm 
 
-        # check to see if AzureAD module is installed and install if necessary
+    }   
+    
+    # connect to AzureAD
 
-        if ($null -eq (Get-Module -ListAvailable -Name AzureAD)) {
+    Connect-AzureAD -AccountId "electric.one@electricalbreakdown.com" -Verbose | Out-Null
 
-            Write-Verbose "Installing AzureAD module..." -Verbose
-            Install-Module AzureAD -Scope CurrentUser -Confirm 
+    $azureConnected = $true
 
-        }   
-     
+}
 
-        # connect to AzureAD
+catch {
 
-        Connect-AzureAD -AccountId "electric.one@electricalbreakdown.com" -Verbose | Out-Null
-
-        $azureConnected = $true
-
-    }
-
-    catch {
-
-        Write-Host "`nThere was a problem connecting to AzureAD. Please try again.`n" -ForegroundColor Red
-        throw
-
-    }
+    Write-Host "`nThere was a problem connecting to AzureAD. Please try again.`n" -ForegroundColor Red
+    throw
 
 }
 
 
 
-#----------------------------- search AzureAD for compliant devices with the targetOS -----------------------------------#
+#----------------------------- Search AzureAD for compliant devices with the targetOS -----------------------------------#
 
 
-#$azureDevices = Get-AzureADDevice -All $true | Where-Object {$_.DeviceOSType -eq $targetOS  -and $_.IsCompliant -eq $true
-
-$azureDevices = Get-AzureADDevice -All $true | Where-Object {$_.DeviceOSType -eq $targetOS}
-
-
+$azureDevices = Get-AzureADDevice -All $true | Where-Object {$_.DeviceOSType -eq $targetOS  -and $_.IsCompliant -eq $true
 
 if($null -ne $azureDevices){
     
@@ -94,18 +82,15 @@ if($null -ne $azureDevices){
 
 else {
 
-
     Write-Host "`nThere were no compliant $targetOS devices found.`n"
 
 }
-
 
 
 #----------------------------------------------- Export results to CSV ---------------------------------------------------#
 
 
 if($resultsFound) {
-
 
     try  {
 
@@ -119,14 +104,12 @@ if($resultsFound) {
 
         Write-Host "`nThere was a problem exporting the file. Results have been displayed to the console.`n" -ForegroundColor Red
         
-        $azureUsers | Select-Object -Property DisplayName, UserPrincipalName, ObjectID -Unique | Sort-Object -Property DisplayName | Format-Table
-                
+        $azureUsers | Select-Object -Property DisplayName, UserPrincipalName, ObjectID -Unique | Sort-Object -Property DisplayName | Format-Table                
 
     }
 
 
-
-    #--------------------- add device owners to group ------------------------------#
+    #--------------------------------- Add device owners to Azure group ----------------------------------------------#
 
 
     foreach($owner in $deviceOwners) {
@@ -136,11 +119,8 @@ if($resultsFound) {
         Write-Host "$($owner.UserPrincipalName) has been added to the $($azureGroup.DisplayName) group`n"
 
     }
-
-
-
+    
 } # close if block
-
 
 
 Read-Host "Press any key to exit"
