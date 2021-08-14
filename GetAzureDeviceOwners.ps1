@@ -49,9 +49,7 @@ try {
     # connect to AzureAD
 
     Connect-AzureAD -AccountId "electric.one@electricalbreakdown.com" -Verbose | Out-Null
-
-    $azureConnected = $true
-
+    
 }
 
 catch {
@@ -66,7 +64,7 @@ catch {
 #----------------------------- Search AzureAD for compliant devices with the targetOS -----------------------------------#
 
 
-$azureDevices = Get-AzureADDevice -All $true | Where-Object {$_.DeviceOSType -eq $targetOS  -and $_.IsCompliant -eq $true
+$azureDevices = Get-AzureADDevice -All $true | Where-Object {$_.DeviceOSType -eq $targetOS  -and $_.IsCompliant -eq $true}
 
 if($null -ne $azureDevices){
     
@@ -116,9 +114,11 @@ if($resultsFound) {
 
         Add-AzureADGroupMember -ObjectId $azureGroupID -RefObjectId $owner.ObjectID
 
-        Write-Host "$($owner.UserPrincipalName) has been added to the $($azureGroup.DisplayName) group`n"
+        Write-Host "$($owner.UserPrincipalName) has been added to the $($azureGroup.DisplayName) group.`n"
 
     }
+    
+    Write-Host "$($deviceOwners.count) have been added to the $($azureGroup.DisplayName) group."
     
 } # close if block
 
