@@ -7,4 +7,4 @@ I wanted to be able to get a list of all the users of a specific OS type so that
 <img src="/CSV_Screenshot.png" alt="Screenshot of what the exported CSV looks like" width="600px"/>
 
 # Conclusion
-This was mostly a quick practice project for me, and while writing it I also used Azure AD Connect to sync my personal on-prem AD environment with Azure AD to mimic the hybrid environment I work with at my day job. 
+This was mostly a quick practice project for me, and while writing it I also gained the experience of using Azure AD Connect to sync my personal on-prem AD environment with Azure AD to mimic the hybrid environment I work with at my day job. 
